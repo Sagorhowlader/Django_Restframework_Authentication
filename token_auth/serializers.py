@@ -1,9 +1,12 @@
 import re
 
-from rest_framework import serializers
-from django.contrib.auth.models import User
-from rest_framework.serializers import ValidationError
+from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User
+from rest_framework import serializers
+from rest_framework.authtoken.models import Token
+from rest_framework.serializers import ValidationError
+
 
 def validate_username(value):
     if not re.match(r'[a-zA-Z][a-zA-z0-9]+$', value):
@@ -38,3 +41,22 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         validated_data['password'] = make_password(validated_data['password'])
         user = User.objects.create(**validated_data)
         return user
+
+
+class UserLoginSerializer(serializers.ModelSerializer):
+    username = serializers.CharField()
+    password = serializers.CharField(required=True, write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email', 'password']
+
+    def validate(self, data):
+        is_authenticated = authenticate(**data)
+        return is_authenticated
+
+    def to_representation(self, instance):
+        token, created = Token.objects.get_or_create(user=instance)
+        representation = super().to_representation(instance)
+        representation['token'] = token.key
+        return representation
