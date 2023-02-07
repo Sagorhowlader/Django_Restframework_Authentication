@@ -62,3 +62,12 @@ class ViewUserDetails(APIView):
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(data="User not found", status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id):
+        try:
+            user = User.objects.get(pk=id)
+            if user:
+                user.delete()
+                return Response(data={}, status=status.HTTP_204_NO_CONTENT)
+        except:
+            return Response(data="User not found", status=status.HTTP_400_BAD_REQUEST)
