@@ -11,6 +11,9 @@ from rest_framework.serializers import ValidationError
 def validate_username(value):
     if not re.match(r'[a-zA-Z][a-zA-z0-9]+$', value):
         raise ValidationError("Username must start with a letter and contain only letters and numbers.")
+    username = User.objects.filter(username=value).first()
+    if username:
+        raise ValidationError("User name already exist!!")
 
 
 def validate_email(value):
@@ -18,10 +21,12 @@ def validate_email(value):
         raise ValidationError("Enter a valid email address")
     email = User.objects.filter(email=value).first()
     if email:
-        raise ValidationError("Enter already exist!!")
+        raise ValidationError("Email already exist!!")
 
 
 class UserSerializers(serializers.ModelSerializer):
+    username = serializers.CharField(validators=[validate_username])
+
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email']
